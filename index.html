@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cutler County Sheriff's Dept.</title>
     <link rel="icon" type="image/png" href="https://media.discordapp.net/attachments/1403444626983096340/1403444627742392370/CCSD_logo.png?ex=68979329&is=689641a9&hm=395544f103efc4b3222f2a437b6fffd6f4ecacc694447162e5b1e45ec7323516&=&format=webp&quality=lossless&width=780&height=780">
-    <!-- ADDED a library to handle screenshotting -->
+    <!-- Library to handle screenshotting -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <!-- Era-appropriate Typewriter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #f4f1e9;
@@ -15,11 +19,12 @@
             --border-color: #d1c7b8;
             --input-bg: #ffffff;
             --input-bg-alt: #fdfaf4;
-            --container-bg: rgba(255, 255, 255, 0.6);
+            --container-bg: rgba(244, 241, 233, 0.9);
             --danger-color: #9d2f2f;
             --danger-bg: rgba(157, 47, 47, 0.1);
             --header-bg: #e9e4d8;
             --logo-bg: #ffffff;
+            --armor-active-color: #8c6a48;
         }
 
         body {
@@ -28,6 +33,23 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             overflow-y: scroll;
+        }
+        
+        /* Faded background logo */
+        body::after {
+            content: "";
+            background: url('https://media.discordapp.net/attachments/1403444626983096340/1403444627742392370/CCSD_logo.png?ex=68979329&is=689641a9&hm=395544f103efc4b3222f2a437b6fffd6f4ecacc694447162e5b1e45ec7323516&=&format=webp&quality=lossless&width=780&height=780');
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 50vw;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            z-index: -1;
+            pointer-events: none;
         }
 
         .container {
@@ -50,98 +72,19 @@
             background-color: var(--header-bg);
         }
 
-        .header-title {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        .header-title { display: flex; flex-direction: column; align-items: center; }
+        .logo { max-height: 90px; max-width: 90px; background-color: var(--logo-bg); border: 3px solid var(--border-color); border-radius: 50%; padding: 5px; }
+        h1 { font-family: 'Georgia', 'Times New Roman', serif; font-size: 24px; text-transform: uppercase; color: var(--accent-color); margin: 0; font-weight: 600; }
+        .subtitle { font-family: 'Georgia', 'Times New Roman', serif; font-size: 16px; text-transform: uppercase; color: var(--accent-color); margin-top: 5px; }
+        h2 { font-family: 'Georgia', 'Times New Roman', serif; font-size: 18px; margin-top: 10px; margin-bottom: 10px; text-transform: uppercase; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; color: var(--accent-color); font-weight: 600; }
+        h3 { font-size: 15px; text-transform: uppercase; border: none; margin: 0 0 8px 0; padding: 0; color: var(--accent-color); font-weight: 500; }
 
-        .logo {
-            max-height: 90px;
-            max-width: 90px;
-            background-color: var(--logo-bg);
-            border: 3px solid var(--border-color);
-            border-radius: 50%;
-            padding: 5px;
-        }
-
-        h1 {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 24px;
-            text-transform: uppercase;
-            color: var(--accent-color);
-            margin: 0;
-            font-weight: 600;
-        }
+        .main-menu, .loader-menu { text-align: center; padding: 40px; border: 1px solid var(--border-color); margin: 20px auto; background: var(--input-bg-alt); max-width: 600px; }
         
-        .subtitle {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 16px;
-            text-transform: uppercase;
-            color: var(--accent-color);
-            margin-top: 5px;
-        }
-
-        h2 {
-            font-family: 'Georgia', 'Times New Roman', serif;
-            font-size: 18px;
-            margin-top: 10px;
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 5px;
-            color: var(--accent-color);
-            font-weight: 600;
-        }
-        
-        h3 {
-            font-size: 15px;
-            text-transform: uppercase;
-            border: none;
-            margin: 0 0 8px 0;
-            padding: 0;
-            color: var(--accent-color);
-            font-weight: 500;
-        }
-
-        .main-menu, .loader-menu {
-            text-align: center;
-            padding: 40px;
-            border: 1px solid var(--border-color);
-            margin: 20px auto;
-            background: var(--input-bg-alt);
-            max-width: 600px;
-        }
-        
-        button, .button {
-            background-color: var(--accent-color);
-            color: #ffffff;
-            border: 1px solid var(--accent-color);
-            padding: 10px 18px;
-            font-size: 14px;
-            cursor: pointer;
-            margin: 5px;
-            font-family: inherit;
-            text-transform: uppercase;
-            font-weight: 500;
-            border-radius: 3px;
-            transition: background-color 0.2s;
-        }
-        
-        button:hover, .button:hover {
-            background-color: #4a3b2e;
-        }
-        
-        button.secondary {
-            background-color: transparent;
-            color: var(--accent-color);
-            border: 1px solid var(--accent-color);
-        }
-
-        button:disabled {
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
+        button, .button { background-color: var(--accent-color); color: #ffffff; border: 1px solid var(--accent-color); padding: 10px 18px; font-size: 14px; cursor: pointer; margin: 5px; font-family: inherit; text-transform: uppercase; font-weight: 500; border-radius: 3px; transition: background-color 0.2s; }
+        button:hover, .button:hover { background-color: #4a3b2e; }
+        button.secondary { background-color: transparent; color: var(--accent-color); border: 1px solid var(--accent-color); }
+        button:disabled { cursor: not-allowed; opacity: 0.6; }
 
         .hidden { display: none !important; }
 
@@ -153,10 +96,7 @@
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         
         label { font-weight: bold; display: block; margin-bottom: 5px; color: var(--accent-color); font-size: 14px; }
-        input, select, textarea {
-            width: 100%; padding: 8px; box-sizing: border-box; background-color: #ffffff; color: var(--text-color);
-            border: 1px solid #ccc; border-radius: 3px; font-family: inherit; font-size: 14px;
-        }
+        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; background-color: #ffffff; color: var(--text-color); border: 1px solid #ccc; border-radius: 3px; font-family: inherit; font-size: 14px; }
         input:focus, select:focus, textarea:focus { border-color: var(--accent-color); outline: none; box-shadow: 0 0 5px rgba(90, 74, 58, 0.2); }
         textarea { resize: vertical; min-height: 60px; }
 
@@ -195,9 +135,7 @@
         #saved-sheets-list li { background: var(--input-bg-alt); padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); }
         
         .sub-skill-group { padding: 10px; border: 1px solid var(--border-color); }
-        .sub-skill-item { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
-        .skill-item { display: flex; align-items: center; gap: 8px; }
-        
+        .sub-skill-item, .skill-item { display: flex; align-items: center; margin-bottom: 8px; gap: 8px; }
         .skill-label-input { display: flex; align-items: center; gap: 8px; width: 100%;}
         .skill-label-input label { flex-shrink: 0; flex-basis: 120px; margin: 0; font-weight: normal; }
         .skill-label-input input { flex-grow: 1; }
@@ -205,7 +143,24 @@
 
         .sub-skill-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
         .sub-skill-header-flex button { padding: 3px 10px; font-size: 12px; margin: 0; }
-        
+
+        /* Modal & Armor Styles */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; display: flex; justify-content: center; align-items: center; }
+        .modal-content { background: var(--input-bg-alt); border: 2px solid var(--accent-color); padding: 20px; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
+        .modal-controls { margin-bottom: 15px; }
+        .preset-list { list-style: none; padding: 0; margin: 0; }
+        .preset-item { border: 1px solid var(--border-color); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: var(--input-bg); }
+        .preset-info h4 { margin: 0 0 8px 0; color: var(--accent-color); }
+        .preset-info h4 .expense-tag { font-size: 0.9em; font-weight: normal; margin-left: 8px; opacity: 0.8; }
+        .preset-info p { font-size: 0.9em; margin: 0; line-height: 1.4; }
+
+        .armor-controls { display: flex; align-items: center; gap: 4px; }
+        #armor-btn { width: 34px; height: 34px; font-size: 16px; line-height: 16px; padding: 0; flex-shrink: 0; border-radius: 50%; }
+        #armor-points { width: 50px; text-align: center; }
+        #armor-btn.armor-active { color: var(--armor-active-color); border-color: var(--armor-active-color); box-shadow: 0 0 8px var(--armor-active-color); background: rgba(140, 106, 72, 0.1); }
+        #armor-points.armor-active { color: var(--armor-active-color); border-color: var(--armor-active-color); background: rgba(140, 106, 72, 0.1); }
+
     </style>
 </head>
 <body>
@@ -214,6 +169,27 @@
         <!-- All HTML content will be injected by JavaScript -->
     </div>
 
+    <!-- Armor Modal -->
+    <div id="armor-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>SELECT ARMOR</h2>
+                <button onclick="closeArmorModal()" class="secondary">CLOSE</button>
+            </div>
+            <div class="modal-controls">
+                <label class="styled-checkbox">
+                    <input type="checkbox" id="helmet-checkbox">
+                    <span class="checkbox-visual"></span> ADD HELMET (+1 AP)
+                </label>
+            </div>
+            <hr style="border-color: var(--border-color); margin: 15px 0;">
+            <ul id="armor-preset-list" class="preset-list">
+                <!-- Armor presets will be injected here by JS -->
+            </ul>
+        </div>
+    </div>
+
+
 <script>
     // --- INJECT ALL HTML ---
     document.querySelector('.container').innerHTML = `
@@ -221,13 +197,13 @@
             <img src="https://media.discordapp.net/attachments/1403444626983096340/1403444627742392370/CCSD_logo.png?ex=68979329&is=689641a9&hm=395544f103efc4b3222f2a437b6fffd6f4ecacc694447162e5b1e45ec7323516&=&format=webp&quality=lossless&width=780&height=780" alt="CCSD Logo" class="logo">
             <div class="header-title">
                 <h1>Cutler County Sheriff's Department</h1>
-                <div class="subtitle">Deputy File</div>
+                <div class="subtitle">INTRANET</div>
             </div>
             <img src="https://media.discordapp.net/attachments/1403414323484950538/1403426700812882000/cutler_county_wa_logo.png?ex=68978277&is=689630f7&hm=3c91e4764b2e85faed417f56b38b01f5d6475f2bac06dd866d471cf3e1455b83&=&format=webp&quality=lossless&width=764&height=780" alt="Cutler County Logo" class="logo">
         </header>
         <main id="main-view">
             <div class="main-menu">
-                <h2>SYSTEM ACCESS</h2>
+                <h2>MAIN MENU</h2>
                 <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW DEPUTY FILE</button>
                 <button onclick="showView('loader')" class="secondary">> LOAD DEPUTY FILE</button>
             </div>
@@ -278,8 +254,9 @@
                 </section>
                 <section class="form-section">
                     <h2>DERIVED ATTRIBUTES</h2>
-                    <div class="grid-container" style="grid-template-columns: 1fr 1fr;">
+                    <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;">
                         <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <span id="hp-max">0</span></div></div>
+                        <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div>
                         <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <span id="wp-max">0</span></div></div>
                         <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <span id="san-max">0</span></div></div>
                         <div><label>BREAKING PT</label><input type="text" id="bp" readonly></div>
@@ -328,25 +305,18 @@
 
     // --- CONFIG ---
     const MAX_STAT_POINTS = 84, MIN_STAT_VALUE = 3, MAX_STAT_VALUE = 18;
+    let isArmorActive = false;
+    let currentArmorPoints = 0;
     const ranks = ["Probationary Deputy", "Deputy 2nd Class", "Deputy 1st Class", "Corporal", "Sergeant", "Lieutenant", "Captain", "Chief Deputy", "Undersheriff", "Sheriff"];
     const stats = ["STR", "CON", "DEX", "INT", "POW", "CHA"];
-    const dgSkills = {
-        'Accounting': 10, 'Alertness': 20, 'Anthropology': 0, 'Archeology': 0, 'Artillery': 0,
-        'Athletics': 30, 'Bureaucracy': 10, 'Criminology': 10, 'Demolitions': 0, 'Disguise': 10,
-        'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0,
-        'Heavy Machinery': 10, 'Heavy Weapons': 0, 'History': 10, 'HUMINT': 10, 'Law': 0,
-        'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Occult': 10, 'Persuade': 20,
-        'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0,
-        'Stealth': 20, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Unarmed Combat': 40, 'Unnatural': 0
-    };
-    const complexSkills = {
-        'Art': ['Acting', 'Photography', 'Writing'],
-        'Craft': ['Electrician', 'Locksmithing', 'Mechanic', 'Microelectronics'],
-        'Foreign Language': ['Spanish', 'Russian'],
-        'Military Science': ['Air', 'Land', 'Sea'],
-        'Pilot': ['Airplane', 'Boat', 'Helicopter', 'Heavy Vehicle'],
-        'Science': ['Biology', 'Chemistry', 'Geology', 'Mathematics', 'Physics']
-    };
+    const dgSkills = { 'Accounting': 10, 'Alertness': 20, 'Anthropology': 0, 'Archeology': 0, 'Artillery': 0, 'Athletics': 30, 'Bureaucracy': 10, 'Criminology': 10, 'Demolitions': 0, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 0, 'History': 10, 'HUMINT': 10, 'Law': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Occult': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Unarmed Combat': 40, 'Unnatural': 0 };
+    const complexSkills = { 'Art': ['Acting', 'Photography', 'Writing'], 'Craft': ['Electrician', 'Locksmithing', 'Mechanic', 'Microelectronics'], 'Foreign Language': ['Spanish', 'Russian'], 'Military Science': ['Air', 'Land', 'Sea'], 'Pilot': ['Airplane', 'Boat', 'Helicopter', 'Heavy Vehicle'], 'Science': ['Biology', 'Chemistry', 'Geology', 'Mathematics', 'Physics'] };
+    const armorPresets = [
+        { name: "Kevlar vest (Concealable)", ap: 3, desc: "Standard soft body armor.", isBombSuit: false },
+        { name: "Reinforced Kevlar vest (Concealable)", ap: 4, desc: "Soft body armor with trauma plate inserts.", isBombSuit: false },
+        { name: "Tactical body armor", ap: 5, desc: "Hard plate carrier. Cannot be concealed.", isBombSuit: false },
+        { name: "Bomb suit", ap: 10, desc: "Heavy EOD suit. Includes helmet. Cannot be concealed.", isBombSuit: true }
+    ];
 
     // --- INITIALIZATION ---
     window.onload = () => { populateRanks(); populateStats(); populateSkills(); loadSavedSheets(); };
@@ -355,6 +325,7 @@
         document.getElementById('sheet-form').reset();
         document.getElementById('bonds-container').innerHTML = '';
         document.getElementById('weapons-body').innerHTML = '';
+        deactivateArmor();
         populateSkills();
         populateStats();
         addBond();
@@ -371,22 +342,11 @@
         const container = document.getElementById('skills-container');
         let simpleSkillNames = Object.keys(dgSkills).sort();
         let html = '<div class="grid-container" style="grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); grid-auto-rows: min-content; align-items: start;">';
-        
-        simpleSkillNames.forEach(skill => {
-            const baseValue = dgSkills[skill];
-            const skillId = `skill-${skill.replace(/\s+/g, '-')}`;
-            html += `<div class="skill-item"><div class="skill-label-input"><label for="${skillId}">${skill}</label><input type="number" id="${skillId}" min="0" max="99" value="${baseValue}"></div></div>`;
-        });
+        simpleSkillNames.forEach(skill => { const baseValue = dgSkills[skill]; const skillId = `skill-${skill.replace(/\s+/g, '-')}`; html += `<div class="skill-item"><div class="skill-label-input"><label for="${skillId}">${skill}</label><input type="number" id="${skillId}" min="0" max="99" value="${baseValue}"></div></div>`; });
         html += '</div>';
-
         html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 15px;">';
-        Object.keys(complexSkills).forEach(category => {
-            html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3>${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${category}-skills-container">`;
-            // You can add default complex skills here if you want
-            html += `</div> </div>`;
-        });
+        Object.keys(complexSkills).forEach(category => { html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3>${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${category}-skills-container"></div> </div>`; });
         html += '</div>';
-
         container.innerHTML = html;
     }
 
@@ -399,14 +359,52 @@
     function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
     
     // --- INTERACTIVE SECTIONS ---
-    function checkAdaptedStatus() { const violenceCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', violenceCount < 3); const helplessnessCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', helplessnessCount < 3); }
+    function checkAdaptedStatus() { const vCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', vCount < 3); const hCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', hCount < 3); }
     function addComplexSkill(category, data = {}){ const container = document.getElementById(`${category}-skills-container`); const item = document.createElement('div'); item.className = 'sub-skill-item'; item.innerHTML = `<div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="99" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
     function addWeapon(data = {}) { const newRow = document.getElementById('weapons-body').insertRow(); newRow.innerHTML = `<td><input type="text" value="${data.name || ''}"></td><td><input type="number" min="0" max="99" value="${data.skill || ''}"></td><td><div class="input-group"><input type="number" min="0" value="${data.range || ''}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${data.dmg || ''}"></td><td><input type="number" min="0" value="${data.ap || ''}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${data.lethality || ''}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${data.ammoC || ''}"> / <input type="number" min="0" value="${data.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`; }
-    function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; item.innerHTML = `<input type="text" placeholder="Bond Name (e.g., Spouse, Child)" value="${data.name || ''}"><input type="number" min="0" placeholder="Score" value="${data.score || ''}"><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; const cha = parseInt(document.getElementById('CHA').value) || 0; item.innerHTML = `<input type="text" placeholder="Bond Name (e.g., Spouse, Child)" value="${data.name || ''}"><input type="number" min="0" placeholder="Score" value="${data.score || cha}"><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    
+    // --- ARMOR MANAGEMENT ---
+    function toggleArmor() { if (isArmorActive) { deactivateArmor(); } else { openArmorModal(); } }
+    function openArmorModal() { populateArmorPresets(); document.getElementById('armor-modal').classList.remove('hidden'); }
+    function closeArmorModal() { document.getElementById('armor-modal').classList.add('hidden'); }
+    function populateArmorPresets() {
+        const list = document.getElementById('armor-preset-list');
+        const helmetCheckbox = document.getElementById('helmet-checkbox');
+        list.innerHTML = armorPresets.map(preset => `<li class="preset-item" data-is-bomb-suit="${preset.isBombSuit}"><div class="preset-info"><h4>${preset.name} <span class="expense-tag">(AP: ${preset.ap})</span></h4><p>${preset.desc}</p></div><button onclick='selectArmor(${preset.ap}, ${preset.isBombSuit})'>SELECT</button></li>`).join('');
+        document.querySelectorAll('#armor-preset-list .preset-item').forEach(item => { item.addEventListener('mouseover', () => { const isBombSuit = item.getAttribute('data-is-bomb-suit') === 'true'; if (isBombSuit) { helmetCheckbox.checked = false; helmetCheckbox.disabled = true; } else { helmetCheckbox.disabled = false; } }); });
+    }
+    function selectArmor(baseAP, isBombSuit) {
+        const helmetCheckbox = document.getElementById('helmet-checkbox');
+        let totalAP = baseAP;
+        if (helmetCheckbox.checked && !isBombSuit) { totalAP += 1; }
+        isArmorActive = true;
+        currentArmorPoints = totalAP;
+        const apInput = document.getElementById('armor-points');
+        const armorBtn = document.getElementById('armor-btn');
+        apInput.value = totalAP;
+        apInput.classList.remove('hidden');
+        apInput.classList.add('armor-active');
+        armorBtn.classList.add('armor-active');
+        closeArmorModal();
+    }
+    function deactivateArmor() {
+        isArmorActive = false; currentArmorPoints = 0;
+        const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); const helmetCheckbox = document.getElementById('helmet-checkbox');
+        apInput.value = 0; apInput.classList.add('hidden'); apInput.classList.remove('armor-active'); armorBtn.classList.remove('armor-active');
+        helmetCheckbox.checked = false; helmetCheckbox.disabled = false;
+    }
+    function validateArmorPoints(event) {
+        const input = event.target;
+        let value = parseInt(input.value, 10);
+        if (isNaN(value)) { value = currentArmorPoints; }
+        if (value > parseInt(input.max)) { input.value = parseInt(input.max); }
+        if (value <= 0) { deactivateArmor(); } else { currentArmorPoints = value; }
+    }
     
     // --- DATA MANAGEMENT ---
-    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value })); Object.keys(complexSkills).forEach(cat => { data[cat] = Array.from(document.querySelectorAll(`#${cat}-skills-container .sub-skill-item`)).map(item => ({ spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value })); }); return data; }
-    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key]) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); document.getElementById('bonds-container').innerHTML = ''; if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); updateAllCalculations(); checkAdaptedStatus(); }
+    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value })); Object.keys(complexSkills).forEach(cat => { data[cat] = Array.from(document.querySelectorAll(`#${cat}-skills-container .sub-skill-item`)).map(item => ({ spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value })); }); data.isArmorActive = isArmorActive; data.currentArmorPoints = currentArmorPoints; return data; }
+    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key] && !['isArmorActive', 'currentArmorPoints'].includes(key)) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); document.getElementById('bonds-container').innerHTML = ''; if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); if (data.isArmorActive && data.currentArmorPoints > 0) { const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); isArmorActive = true; currentArmorPoints = data.currentArmorPoints; apInput.value = currentArmorPoints; apInput.max = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); } updateAllCalculations(); checkAdaptedStatus(); }
     function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_DEPUTY'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Deputy file '${sheetName}' saved locally.`); loadSavedSheets(); } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button class="secondary" onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
     function loadSheet(key) { populateCompleteForm(JSON.parse(localStorage.getItem(key))); showView('character-sheet'); }
@@ -415,37 +413,14 @@
     function loadCharacterFromFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
     function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'deputy').replace(/\s+/g, '_')}_cutler_county.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
     
-    // --- Screenshot Function ---
+    // --- Screenshot ---
     function screenshotPage(event) {
-        const btn = event.currentTarget;
-        const originalText = btn.textContent;
-        btn.textContent = '...GENERATING IMAGE...';
-        btn.disabled = true;
-
-        html2canvas(document.querySelector('.container'), {
-            useCORS: true, allowTaint: true, scrollX: 0, scrollY: -window.scrollY,
-            onclone: (doc) => {
-                // Ensure logos load on the cloned document for the canvas
-                const logos = doc.querySelectorAll('.logo');
-                logos.forEach(logo => {
-                    logo.style.backgroundColor = 'transparent'; // Make bg transparent for better look
-                });
-            }
-        }).then(canvas => {
-            const a = document.createElement('a');
-            a.href = canvas.toDataURL('image/png', 1.0);
-            const agentName = document.getElementById('full-name').value || 'UNNAMED_DEPUTY';
-            a.download = `${agentName.replace(/\s+/g, '_')}_CCSD_File.png`;
-            a.click();
-            a.remove();
-        }).catch(err => {
-            console.error('Screenshot failed:', err);
-            alert('Could not capture screenshot. Check console for details.');
-        }).finally(() => {
-            btn.textContent = originalText;
-            btn.disabled = false;
-        });
+        const btn = event.currentTarget; const originalText = btn.textContent; btn.textContent = '...GENERATING IMAGE...'; btn.disabled = true;
+        html2canvas(document.querySelector('#character-sheet-container'), { useCORS: true, allowTaint: true, scrollX: 0, scrollY: -window.scrollY, onclone: (doc) => { const logos = doc.querySelectorAll('.logo'); logos.forEach(logo => { logo.style.backgroundColor = 'transparent'; }); } }).then(canvas => {
+            const a = document.createElement('a'); a.href = canvas.toDataURL('image/png', 1.0); const agentName = document.getElementById('full-name').value || 'UNNAMED_DEPUTY'; a.download = `${agentName.replace(/\s+/g, '_')}_CCSD_File.png`; a.click(); a.remove();
+        }).catch(err => { console.error('Screenshot failed:', err); alert('Could not capture screenshot.'); }).finally(() => { btn.textContent = originalText; btn.disabled = false; });
     }
+
 </script>
 
 </body>
