@@ -35,7 +35,6 @@
             overflow-y: scroll;
         }
         
-        /* Faded background logo */
         body::after {
             content: "";
             background: url('https://i.imgur.com/qQzem1J.png');
@@ -149,7 +148,6 @@
         .sub-skill-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
         .sub-skill-header-flex button { padding: 3px 10px; font-size: 12px; margin: 0; }
 
-        /* Modal & Armor Styles */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 200; display: flex; justify-content: center; align-items: center; }
         .modal-content { background: var(--input-bg-alt); border: 2px solid var(--accent-color); padding: 20px; max-width: 800px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 15px; }
@@ -195,13 +193,8 @@
 </head>
 <body>
 
-    <div class="container">
-        <!-- All HTML content will be injected by JavaScript -->
-    </div>
-    
+    <div class="container"></div>
     <div id="app-tooltip" class="hidden"></div>
-
-    <!-- Armor Modal -->
     <div id="armor-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -215,13 +208,9 @@
                 </label>
             </div>
             <hr style="border-color: var(--border-color); margin: 15px 0;">
-            <ul id="armor-preset-list" class="preset-list">
-                <!-- Armor presets will be injected here by JS -->
-            </ul>
+            <ul id="armor-preset-list" class="preset-list"></ul>
         </div>
     </div>
-    
-    <!-- Weapon Preset Modal -->
     <div id="weapon-preset-modal" class="modal-overlay hidden">
         <div class="modal-content">
             <div class="modal-header">
@@ -234,32 +223,19 @@
                 <button onclick="addWeapon({}, true)">+ ADD CUSTOM</button>
             </div>
             <hr style="border-color: var(--border-color); margin: 15px 0;">
-            <ul id="weapon-preset-list" class="preset-list">
-                <!-- Preset items will be injected here by JS -->
-            </ul>
+            <ul id="weapon-preset-list" class="preset-list"></ul>
         </div>
     </div>
-
 
 <script>
     // --- STATE MANAGEMENT & CONFIG ---
     let isFormDirty = false;
     let autosaveTimeout;
+    let currentCharacterSaveName = null;
 
-    // --- DISABLE ENTER KEY ---
-    window.addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-        }
-    });
-    
-    // --- UNSAVED CHANGES WARNING ---
-    window.addEventListener('beforeunload', (e) => {
-        if (isFormDirty) {
-            e.preventDefault();
-            e.returnValue = ''; // This is the standard way to trigger the browser's confirmation dialog.
-        }
-    });
+    // --- BROWSER EVENT LISTENERS ---
+    window.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
+    window.addEventListener('beforeunload', e => { if (isFormDirty) { e.preventDefault(); e.returnValue = ''; } });
     
     // --- INJECT ALL HTML ---
     document.querySelector('.container').innerHTML = `
@@ -274,7 +250,7 @@
         <main id="main-view">
             <div class="main-menu">
                 <h2>MAIN MENU</h2>
-                <button onclick="resetForm(); showView('character-sheet'); ">> CREATE NEW DEPUTY FILE</button>
+                <button onclick="createNewSheet()">> CREATE NEW DEPUTY FILE</button>
                 <button onclick="showView('loader')" class="secondary">> LOAD DEPUTY FILE</button>
             </div>
         </main>
@@ -387,12 +363,7 @@
     const stats = ["STR", "CON", "DEX", "INT", "POW", "CHA"];
     const dgSkills = { 'Accounting': 10, 'Alertness': 20, 'Anthropology': 0, 'Archeology': 0, 'Artillery': 0, 'Athletics': 30, 'Bureaucracy': 10, 'Criminology': 10, 'Demolitions': 0, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 0, 'History': 10, 'HUMINT': 10, 'Law': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Occult': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Unarmed Combat': 40, 'Unnatural': 0 };
     const complexSkills = { 'Art': ['Acting', 'Photography', 'Writing'], 'Craft': ['Electrician', 'Locksmithing', 'Mechanic', 'Microelectronics'], 'Foreign Language': ['Spanish', 'Russian'], 'Military Science': ['Air', 'Land', 'Sea'], 'Pilot': ['Airplane', 'Boat', 'Helicopter', 'Heavy Vehicle'], 'Science': ['Biology', 'Chemistry', 'Geology', 'Mathematics', 'Physics'] };
-    const armorPresets = [
-        { name: "Kevlar vest (Concealable)", ap: 3, desc: "Standard soft body armor.", isBombSuit: false },
-        { name: "Reinforced Kevlar vest (Concealable)", ap: 4, desc: "Soft body armor with trauma plate inserts.", isBombSuit: false },
-        { name: "Tactical body armor", ap: 5, desc: "Hard plate carrier. Cannot be concealed.", isBombSuit: false },
-        { name: "Bomb suit", ap: 10, desc: "Heavy EOD suit. Includes helmet. Cannot be concealed.", isBombSuit: true }
-    ];
+    const armorPresets = [ { name: "Kevlar vest (Concealable)", ap: 3, desc: "Standard soft body armor.", isBombSuit: false }, { name: "Reinforced Kevlar vest (Concealable)", ap: 4, desc: "Soft body armor with trauma plate inserts.", isBombSuit: false }, { name: "Tactical body armor", ap: 5, desc: "Hard plate carrier. Cannot be concealed.", isBombSuit: false }, { name: "Bomb suit", ap: 10, desc: "Heavy EOD suit. Includes helmet. Cannot be concealed.", isBombSuit: true } ];
     const skillDescriptions = { 'Accounting': 'The study of finance and business. Use it to sift through financial records for anomalies, such as a hidden bank account or money laundering.', 'Alertness': 'Alertness detects danger. Use it to hear a safety being switched off, to understand the mumbling on the other side of a wall, to spot the bulge of a pistol hidden under a jacket, or to catch someone who is trying to escape notice using Stealth.', 'Artillery': 'Safe and accurate use of mortars, missiles, howitzers, tank cannons, and other heavy gunnery. Use it to destroy troops or a hard target in battle.', 'Athletics': 'Represents long practice doing things like running, jumping, climbing, and throwing. Use Athletics to outrun someone, jump a gap, climb in a crisis, land safely in a fall, hit a target with a thrown knife, or catch something without warning.', 'Craft': 'Making and repairing sophisticated tools and structures. A job that most people could figure out does not require the Craft skill, only an INT or DEX test.', 'Criminology': 'Knowledge of criminal and conspiratorial behavior. Use it to identify and predict criminal behavior, deduce relationships between members of a conspiracy, analyze criminal activity, examine witness statements, or know whom to talk to in the criminal underground.', 'Demolitions': 'The knowledge and practical application of explosives for demolition, breaching, and ordnance disposal. Use it to create or disarm IEDs, prepare charges for breaching, or calculate the effects of a blast.', 'Disguise': 'Alter your Agent’s appearance, voice, posture, body language, and mannerisms to avoid recognition without drawing attention.', 'Dodge': 'Evading danger through instinct and reflexes. Use Dodge to avoid an attack. Against firearms and explosives, Dodge is only useful to get to cover.', 'Drive': 'Handling an automobile or a motorcycle safely in a crisis. Every Agent can drive a car in normal conditions. Use this skill to keep a vehicle safe in a high-speed pursuit or on dangerous terrain.', 'Firearms': 'Safe and accurate shooting with weaponry in combat. Use it to hit a target despite the adrenaline, panic, and shock of violence interfering with hand-eye coordination.', 'First Aid': 'The initial treatment and stabilization of of injuries. Use it to help a character recover lost Hit Points. By comparison, Surgery corrects a severe wound and Medicine ensures long-term recovery.', 'Forensics': 'Gathering detailed information and evidence using forensic equipment. Use it to record biometric data, determine details about a weapon used, discern crucial clues, clean a scene of incriminating evidence, or collect, analyze, and compare fingerprints and DNA samples.', 'HUMINT': 'Human intelligence. Obtains information about a subject through observation, conversation, or examining patterns of behavior and relationships. Use HUMINT to recognize signs of dishonesty, gauge attitude, cultivate sources, or determine what it would take to get a subject to cooperate.', 'Heavy Machinery': 'Safe operation of a tractor, crane, bulldozer, tank, heavy truck, or other big machine in a crisis.', 'Heavy Weapons': 'Safe and accurate use of man-portable heavy ordnance such as machine guns and rocket launchers. Use Heavy Weapons to suppress enemies, or destroy a vehicle in combat.', 'Medicine': 'The study and treatment of injury and illness. Use it to diagnose the cause of an injury, disease, or poisoning, identify abnormalities, determine cause of death, or prescribe proper long-term care.', 'Melee Weapons': 'Lethal use of melee weapons in combat. Use it to hurt or kill an opponent with a knife, axe, club, or other weapon.', 'Military Science': 'Knowledge of military culture, techniques, and regulations. Use it to identify threats, find ranges, recognize weaknesses in a fortification, deduce training level of a unit, reconstruct a battle, or deploy forces advantageously. Types are Land, Air, and Sea.', 'Navigate': 'Finding your way quickly with maps, charts and tables, orienteering, instruments, or dead reckoning.', 'Persuade': 'Changing another’s deeply-held decision or desire. Use Persuade to get your way when the subject is stubborn or the deception is flagrant. This skill also allows your Agent to resist persuasion and interrogation.', 'Pharmacy': 'Knowledge of drugs, from their ingredients and creation, to their effects, uses, and misuses. Use it to identify and produce medicines and antidotes—as well as poisons. Misusing Pharmacy is a quick way to kill a patient.', 'Pilot': 'Piloting, navigating, and captaining waterborne or airborne vehicles. Use it to keep a vessel safe in a crisis, such as through a storm or in a dangerous pursuit. Each vessel type is a separate skill.', 'Psychotherapy': 'The diagnosis and treatment of mental illness. Use it to identify a mental disorder, help a patient recover, and treat mental illness in the long term. You cannot use Psychotherapy on yourself.', 'Ride': 'Handling, training, and riding an animal—horses, donkeys, camels, whatever. Use it to keep safe on an animal in a crisis and to keep riding animals safe, calm, and healthy.', 'SIGINT': 'Signals intelligence. It encompasses encryption, communications intelligence, electronic intelligence, computer science, surveillance of radio and digital communications, and the making and breaking of codes.', 'Search': 'Finding things that are concealed or obscured from plain sight. Use Search to find an object that was hidden with the Stealth skill, or is otherwise so well hidden or disguised that it needs an expert.', 'Science': 'The deep study of the processes of the world. Science is used to find a key insight about the way the universe works—or at least, the way it’s supposed to work.', 'Stealth': 'Concealing your presence or activities. Use it to hide a pistol, camouflage a position, conceal a microphone, pick a pocket, move silently, or follow without being seen. An Agent attempting Stealth can be detected only by an opposing Alertness or Search skill.', 'Surgery': 'The treatment of an injury or abnormality by invasive means. By comparison, First Aid keeps a patient alive until surgery is possible and Medicine ensures longterm recovery.', 'Survival': 'Knowledge of the natural world. Use it to find tracks and trails, plan an expedition, predict weather, recognize when fauna or flora are unusual, or find food, water, and shelter.', 'Swim': 'Most Agents can swim for leisure. Use the Swim skill in a dangerous crisis: going a long distance in choppy water, keeping a friend from drowning, or similar situations.', 'Unarmed Combat': 'Use Unarmed Combat to hurt or kill an opponent with your Agent’s bare hands (or feet, elbows, teeth, or head).' };
     const weaponPresets = { "Melee Weapons": [ { name: "Unarmed", skill: 40, range: 1, dmg: "1D4-1", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "Basic hand-to-hand strikes.", examples: "e.g., Boxing, Karate" }, { name: "Brass Knuckles", skill: 40, range: 1, dmg: "1D4", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A simple, concealable force-multiplier." }, { name: "Knife", skill: 30, range: 1, dmg: "1D4", ap: "3", lethality: "", ammoC: "", ammoM: "", desc: "A small, single-edged blade." }, { name: "Combat Dagger", skill: 30, range: 1, dmg: "1D6", ap: "3", lethality: "", ammoC: "", ammoM: "", desc: "A dedicated combat knife with a larger blade." }, { name: "Club/Baton", skill: 30, range: 1, dmg: "1D6", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A blunt instrument for subduing targets." }, { name: "Baseball Bat", skill: 30, range: 1, dmg: "1D8", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A heavy club for sport or improvised combat." }, { name: "Fire Axe", skill: 30, range: 1, dmg: "1D10", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A heavy, two-handed axe." } ], "Firearms": [ { name: "Light Pistol (.38)", skill: 20, range: 10, dmg: "1D8", ap: "", lethality: "", ammoC: 6, ammoM: 6, desc: "Small-caliber sidearms, easily concealable." }, { name: "Medium Pistol (9mm)", skill: 20, range: 15, dmg: "1D10", ap: "", lethality: "", ammoC: 15, ammoM: 15, desc: "Standard-issue service pistols." }, { name: "Heavy Pistol (.45)", skill: 20, range: 20, dmg: "1D12", ap: "", lethality: "", ammoC: 8, ammoM: 8, desc: "Large-caliber handguns with stopping power." }, { name: "Shotgun (Shot)", skill: 20, range: 50, dmg: "2D10", ap: "", lethality: "", ammoC: 5, ammoM: 5, desc: "Fires a spread of pellets, devastating at close range." }, { name: "Shotgun (Slug)", skill: 20, range: 75, dmg: "2D8", ap: "", lethality: "", ammoC: 5, ammoM: 5, desc: "Fires a single, solid projectile for greater range." }, { name: "Carbine (5.56mm)", skill: 20, range: 100, dmg: "1D12", ap: "3", lethality: "10", ammoC: 30, ammoM: 30, desc: "Standard patrol rifles, versatile for most scenarios." }, { name: "Rifle (.308)", skill: 20, range: 150, dmg: "1D12+2", ap: "5", lethality: "10", ammoC: 20, ammoM: 20, desc: "Full-power cartridges for superior range and penetration." } ] };
     
@@ -414,31 +385,31 @@
         if (savedAutosavePref === 'true') {
             document.getElementById('autosave-toggle').checked = true;
         }
-
-        const autosavedData = localStorage.getItem('ccsd_autosave_sheet');
-        if (autosavedData) {
-            if (confirm("An unsaved autosave file was found. Do you want to load it?")) {
-                populateCompleteForm(JSON.parse(autosavedData));
-                showView('character-sheet');
-            }
-            localStorage.removeItem('ccsd_autosave_sheet');
-        }
     };
     
-    function resetForm() {
+    function resetForm(isNewSheet = true) {
         document.getElementById('sheet-form').reset();
         document.getElementById('bonds-container').innerHTML = '';
         document.getElementById('weapons-body').innerHTML = '';
+        if (isNewSheet) {
+             document.getElementById('character-id').value = `sheet_${Date.now()}`;
+             currentCharacterSaveName = null;
+        }
         deactivateArmor();
-        populateSkills();
         populateStats();
-        addBond();
-        addBond();
-        addBond();
+        populateSkills();
+        addBond(); addBond(); addBond();
         updateAllCalculations();
         checkAdaptedStatus();
         isFormDirty = false;
-        localStorage.removeItem('ccsd_autosave_sheet');
+    }
+
+    function createNewSheet() {
+        if (isFormDirty && !confirm("Creating a new file will discard your current unsaved changes. Continue?")) {
+            return;
+        }
+        resetForm(true);
+        showView('character-sheet');
     }
     
     function populateRanks() { document.getElementById('rank').innerHTML = ranks.map(r => `<option value="${r}">${r}</option>`).join(''); }
@@ -462,10 +433,9 @@
         });
         html += '</div>';
         container.innerHTML = html;
-        setupTooltips(); // Re-run tooltips after populating
+        setupTooltips();
     }
 
-    // --- TOOLTIP MANAGEMENT ---
     function setupTooltips() {
         const tooltip = document.getElementById('app-tooltip');
         document.querySelectorAll('[data-tooltip]').forEach(element => {
@@ -488,112 +458,101 @@
 
     // --- VIEW MANAGEMENT & UI/CALCS ---
     function showView(viewId) { document.querySelectorAll('main').forEach(el => el.classList.add('hidden')); const viewEl = document.getElementById(`${viewId}-view`); if(viewEl){ viewEl.classList.remove('hidden'); if(viewId === 'loader') loadSavedSheets();} }
-    function confirmReturnToMenu() {
-        if (isFormDirty && !confirm("You have unsaved changes that will be lost. Are you sure you want to return to the menu?")) {
-            return;
-        }
-        isFormDirty = false;
-        showView('main');
-    }
+    function confirmReturnToMenu() { if (isFormDirty && !confirm("You have unsaved changes that will be lost. Are you sure?")) return; isFormDirty = false; showView('main'); }
     function changeStat(stat, delta) { const input = document.getElementById(stat); let currentValue = parseInt(input.value); let pointsSpent = stats.reduce((acc, s) => acc + parseInt(document.getElementById(s).value), 0); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
     function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += value; document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); }
     function updateDerivedAttributes() { const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value); const hpMax = Math.ceil((str + con) / 2), wpMax = pow, sanMax = pow * 5; ['hp', 'wp', 'san'].forEach(attr => { const current = document.getElementById(`${attr}-current`); const maxEl = document.getElementById(`${attr}-max`); const maxVal = eval(`${attr}Max`); maxEl.textContent = maxVal; current.max = maxVal; if (!current.value || parseInt(current.value) > maxVal) { current.value = maxVal; } }); document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-max').textContent) - pow); checkBreakingPoint(); }
     function checkBreakingPoint() { const sanCurrent = parseInt(document.getElementById('san-current').value), bp = parseInt(document.getElementById('bp').value); document.getElementById('bp-warning').classList.toggle('hidden', sanCurrent > bp || isNaN(sanCurrent)); }
     function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
     
-    // --- INTERACTIVE SECTIONS ---
-    function checkAdaptedStatus() { const vCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', vCount < 3); const hCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', hCount < 3); }
     function addComplexSkill(category, data = {}){ const container = document.getElementById(`${category}-skills-container`); const item = document.createElement('div'); item.className = 'sub-skill-item'; item.innerHTML = `<div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="99" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
     function addWeapon(data = {}, closeModal = false) { const newRow = document.getElementById('weapons-body').insertRow(); newRow.innerHTML = `<td><input type="text" value="${data.name || ''}"></td><td><input type="number" min="0" max="99" value="${data.skill || ''}"></td><td><div class="input-group"><input type="number" min="0" value="${data.range || ''}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${data.dmg || ''}"></td><td><input type="number" min="0" value="${data.ap || ''}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${data.lethality || ''}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${data.ammoC || ''}"> / <input type="number" min="0" value="${data.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`; if(closeModal) closeWeaponModal(); }
     function addBond(data = {}) { const container = document.getElementById('bonds-container'); const item = document.createElement('div'); item.className = 'bond-item'; const cha = parseInt(document.getElementById('CHA').value) || 0; item.innerHTML = `<input type="text" placeholder="Bond Name (e.g., Spouse, Child)" value="${data.name || ''}"><input type="number" min="0" placeholder="Score" value="${data.score || cha}"><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
     
-    // --- MODALS (WEAPON, ARMOR) ---
     function openWeaponModal() { document.getElementById('weapon-preset-modal').classList.remove('hidden'); populateWeaponPresets(); }
     function closeWeaponModal() { document.getElementById('weapon-preset-modal').classList.add('hidden'); }
     function populateWeaponCategories() { const select = document.getElementById('weapon-category-select'); select.innerHTML = Object.keys(weaponPresets).map(cat => `<option value="${cat}">${cat}</option>`).join(''); }
     function populateWeaponPresets() { const category = document.getElementById('weapon-category-select').value, list = document.getElementById('weapon-preset-list'); if (!weaponPresets[category]) { list.innerHTML = ''; return; } list.innerHTML = weaponPresets[category].map(preset => `<li class="preset-item"><div class="preset-info"><h4>${preset.name}</h4>${preset.desc ? `<p>${preset.desc}</p>` : ''}</div><button onclick='addWeapon(${JSON.stringify(preset)}, true)'>SELECT</button></li>`).join(''); }
     
-    // --- ARMOR MANAGEMENT ---
-    function toggleArmor() { if (isArmorActive) { deactivateArmor(); } else { openArmorModal(); } }
+    function toggleArmor() { if (isArmorActive) deactivateArmor(); else openArmorModal(); }
     function openArmorModal() { populateArmorPresets(); document.getElementById('armor-modal').classList.remove('hidden'); }
     function closeArmorModal() { document.getElementById('armor-modal').classList.add('hidden'); }
-    function populateArmorPresets() {
-        const list = document.getElementById('armor-preset-list');
-        const helmetCheckbox = document.getElementById('helmet-checkbox');
-        list.innerHTML = armorPresets.map(preset => `<li class="preset-item" data-is-bomb-suit="${preset.isBombSuit}"><div class="preset-info"><h4>${preset.name} <span class="expense-tag">(AP: ${preset.ap})</span></h4><p>${preset.desc}</p></div><button onclick='selectArmor(${preset.ap}, ${preset.isBombSuit})'>SELECT</button></li>`).join('');
-        document.querySelectorAll('#armor-preset-list .preset-item').forEach(item => { item.addEventListener('mouseover', () => { const isBombSuit = item.getAttribute('data-is-bomb-suit') === 'true'; if (isBombSuit) { helmetCheckbox.checked = false; helmetCheckbox.disabled = true; } else { helmetCheckbox.disabled = false; } }); });
-    }
-    function selectArmor(baseAP, isBombSuit) {
-        const helmetCheckbox = document.getElementById('helmet-checkbox');
-        let totalAP = baseAP;
-        if (helmetCheckbox.checked && !isBombSuit) { totalAP += 1; }
-        isArmorActive = true;
-        currentArmorPoints = totalAP;
-        const apInput = document.getElementById('armor-points');
-        const armorBtn = document.getElementById('armor-btn');
-        apInput.value = totalAP;
-        apInput.classList.remove('hidden');
-        apInput.classList.add('armor-active');
-        armorBtn.classList.add('armor-active');
-        closeArmorModal();
-    }
-    function deactivateArmor() {
-        isArmorActive = false; currentArmorPoints = 0;
-        const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); const helmetCheckbox = document.getElementById('helmet-checkbox');
-        apInput.value = 0; apInput.classList.add('hidden'); apInput.classList.remove('armor-active'); armorBtn.classList.remove('armor-active');
-        helmetCheckbox.checked = false; helmetCheckbox.disabled = false;
-    }
-    function validateArmorPoints(event) {
-        const input = event.target;
-        let value = parseInt(input.value, 10);
-        if (isNaN(value)) { value = currentArmorPoints; }
-        if (value > parseInt(input.max)) { input.value = parseInt(input.max); }
-        if (value <= 0) { deactivateArmor(); } else { currentArmorPoints = value; }
-    }
+    function populateArmorPresets() { const list = document.getElementById('armor-preset-list'); const helmetCheckbox = document.getElementById('helmet-checkbox'); list.innerHTML = armorPresets.map(preset => `<li class="preset-item" data-is-bomb-suit="${preset.isBombSuit}"><div class="preset-info"><h4>${preset.name} <span class="expense-tag">(AP: ${preset.ap})</span></h4><p>${preset.desc}</p></div><button onclick='selectArmor(${preset.ap}, ${preset.isBombSuit})'>SELECT</button></li>`).join(''); document.querySelectorAll('#armor-preset-list .preset-item').forEach(item => { item.addEventListener('mouseover', () => { const isBombSuit = item.getAttribute('data-is-bomb-suit') === 'true'; if (isBombSuit) { helmetCheckbox.checked = false; helmetCheckbox.disabled = true; } else { helmetCheckbox.disabled = false; } }); }); }
+    function selectArmor(baseAP, isBombSuit) { const helmetCheckbox = document.getElementById('helmet-checkbox'); let totalAP = baseAP; if (helmetCheckbox.checked && !isBombSuit) totalAP += 1; isArmorActive = true; currentArmorPoints = totalAP; const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); apInput.value = totalAP; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); closeArmorModal(); }
+    function deactivateArmor() { isArmorActive = false; currentArmorPoints = 0; const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); const helmetCheckbox = document.getElementById('helmet-checkbox'); apInput.value = 0; apInput.classList.add('hidden'); apInput.classList.remove('armor-active'); armorBtn.classList.remove('armor-active'); helmetCheckbox.checked = false; helmetCheckbox.disabled = false; }
+    function validateArmorPoints(event) { const input = event.target; let value = parseInt(input.value, 10); if (isNaN(value)) value = currentArmorPoints; if (value > parseInt(input.max)) input.value = parseInt(input.max); if (value <= 0) deactivateArmor(); else currentArmorPoints = value; }
     
     // --- AUTOSAVE ---
     function toggleAutosave(isEnabled) {
         localStorage.setItem('ccsd_autosave_enabled', isEnabled);
-        if (isEnabled) {
-            handleAutosave();
-        }
+        if (isEnabled) handleAutosave();
     }
 
     function handleAutosave() {
         clearTimeout(autosaveTimeout);
-        const autosaveEnabled = document.getElementById('autosave-toggle').checked;
-        if (!autosaveEnabled) return;
+        if (!document.getElementById('autosave-toggle').checked) return;
         
         autosaveTimeout = setTimeout(() => {
             const data = getCompleteFormData();
-            localStorage.setItem('ccsd_autosave_sheet', JSON.stringify(data));
+            const characterName = data['full-name']?.trim();
+            if (!characterName) return; // Autosave only works if there's a name
+
+            const saveData = { name: characterName, ...data };
+            localStorage.setItem(data.id, JSON.stringify(saveData));
             
+            loadSavedSheets(); // Refresh the list to show the new/updated save
             const statusEl = document.getElementById('autosave-status');
             statusEl.textContent = 'Autosaved.';
             statusEl.style.opacity = '1';
             setTimeout(() => { statusEl.style.opacity = '0'; }, 2000);
-
-        }, 2500); // 2.5-second delay after last input
+        }, 5000); // 5-second delay
     }
     
     // --- DATA MANAGEMENT ---
     function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value })); Object.keys(complexSkills).forEach(cat => { data[cat] = Array.from(document.querySelectorAll(`#${cat}-skills-container .sub-skill-item`)).map(item => ({ spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value })); }); data.isArmorActive = isArmorActive; data.currentArmorPoints = currentArmorPoints; return data; }
-    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key] && !['isArmorActive', 'currentArmorPoints'].includes(key)) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); document.getElementById('bonds-container').innerHTML = ''; if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); if (data.isArmorActive && data.currentArmorPoints > 0) { const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); isArmorActive = true; currentArmorPoints = data.currentArmorPoints; apInput.value = currentArmorPoints; apInput.max = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); } updateAllCalculations(); checkAdaptedStatus(); isFormDirty = false; }
-    function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_DEPUTY'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Deputy file '${sheetName}' saved locally.`); loadSavedSheets(); isFormDirty = false; localStorage.removeItem('ccsd_autosave_sheet'); } }
-    function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button class="secondary" onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
-    function loadSheet(key) { if (isFormDirty && !confirm("Loading a new file will discard your current unsaved changes. Continue?")) { return; } populateCompleteForm(JSON.parse(localStorage.getItem(key))); showView('character-sheet'); }
-    function deleteSheet(key) { if(confirm("DELETE THIS FILE? This action cannot be undone.")){ localStorage.removeItem(key); loadSavedSheets(); }}
-    function renameSheet(key) { const data = JSON.parse(localStorage.getItem(key)); const newName = prompt("New filename:", data.name); if (newName) { data.name = newName; localStorage.setItem(key, JSON.stringify(data)); loadSavedSheets(); } }
-    function loadCharacterFromFile(event) { if (isFormDirty && !confirm("Loading a new file will discard your current unsaved changes. Continue?")) { return; } const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
-    function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'deputy').replace(/\s+/g, '_')}_cutler_county.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); isFormDirty = false; localStorage.removeItem('ccsd_autosave_sheet'); }
     
-    // --- Screenshot ---
-    function screenshotPage(event) {
-        const btn = event.currentTarget; const originalText = btn.textContent; btn.textContent = '...GENERATING IMAGE...'; btn.disabled = true;
-        html2canvas(document.querySelector('#character-sheet-container'), { useCORS: true, allowTaint: true, scrollX: 0, scrollY: -window.scrollY, onclone: (doc) => { const logos = doc.querySelectorAll('.logo'); logos.forEach(logo => { logo.style.backgroundColor = 'transparent'; }); } }).then(canvas => {
-            const a = document.createElement('a'); a.href = canvas.toDataURL('image/png', 1.0); const agentName = document.getElementById('full-name').value || 'UNNAMED_DEPUTY'; a.download = `${agentName.replace(/\s+/g, '_')}_CCSD_File.png`; a.click(); a.remove();
-        }).catch(err => { console.error('Screenshot failed:', err); alert('Could not capture screenshot.'); }).finally(() => { btn.textContent = originalText; btn.disabled = false; });
+    function populateCompleteForm(data) {
+        resetForm(false); // Reset form without generating a new ID
+        Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key] && !['isArmorActive', 'currentArmorPoints'].includes(key)) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } });
+        document.getElementById('bonds-container').innerHTML = ''; 
+        if (data.weapons) data.weapons.forEach(w => addWeapon(w)); 
+        if (data.bonds && data.bonds.length > 0) { data.bonds.forEach(b => addBond(b)); } else { addBond(); addBond(); addBond(); } 
+        Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); 
+        if (data.isArmorActive && data.currentArmorPoints > 0) { const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); isArmorActive = true; currentArmorPoints = data.currentArmorPoints; apInput.value = currentArmorPoints; apInput.max = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); } 
+        updateAllCalculations(); 
+        checkAdaptedStatus(); 
+        currentCharacterSaveName = data.name;
+        isFormDirty = false;
     }
+
+    function saveCharacter() {
+        const data = getCompleteFormData();
+        let sheetName = currentCharacterSaveName || data['full-name']?.trim();
+
+        if (!sheetName) {
+            sheetName = prompt("Save file as:");
+            if (!sheetName) return; // User cancelled
+        }
+        
+        const saveData = { name: sheetName, ...data };
+        localStorage.setItem(data.id, JSON.stringify(saveData));
+        alert(`Deputy file '${sheetName}' saved locally.`);
+        
+        isFormDirty = false;
+        currentCharacterSaveName = sheetName;
+        loadSavedSheets();
+    }
+
+    function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button class="secondary" onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
+    
+    function loadSheet(key) { if (isFormDirty && !confirm("Loading a new file will discard your current unsaved changes. Continue?")) return; populateCompleteForm(JSON.parse(localStorage.getItem(key))); showView('character-sheet'); }
+    function deleteSheet(key) { if(confirm("DELETE THIS FILE? This action cannot be undone.")){ localStorage.removeItem(key); loadSavedSheets(); }}
+    function renameSheet(key) { const data = JSON.parse(localStorage.getItem(key)); const newName = prompt("New filename:", data.name); if (newName) { data.name = newName; localStorage.setItem(key, JSON.stringify(data)); loadSavedSheets(); if(document.getElementById('character-id').value === key) { document.getElementById('full-name').value = newName; currentCharacterSaveName = newName; } } }
+    function loadCharacterFromFile(event) { if (isFormDirty && !confirm("Loading from a file will discard your current unsaved changes. Continue?")) return; const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
+    
+    function exportToJson(){ if (isFormDirty && !confirm("You have unsaved changes that may not be included in the export. Save first?")) return; const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'deputy').replace(/\s+/g, '_')}_cutler_county.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    
+    function screenshotPage(event) { const btn = event.currentTarget; const originalText = btn.textContent; btn.textContent = '...GENERATING IMAGE...'; btn.disabled = true; html2canvas(document.querySelector('#character-sheet-container'), { useCORS: true, allowTaint: true, scrollX: 0, scrollY: -window.scrollY, onclone: (doc) => { const logos = doc.querySelectorAll('.logo'); logos.forEach(logo => { logo.style.backgroundColor = 'transparent'; }); } }).then(canvas => { const a = document.createElement('a'); a.href = canvas.toDataURL('image/png', 1.0); const agentName = document.getElementById('full-name').value || 'UNNAMED_DEPUTY'; a.download = `${agentName.replace(/\s+/g, '_')}_CCSD_File.png`; a.click(); a.remove(); }).catch(err => { console.error('Screenshot failed:', err); alert('Could not capture screenshot.'); }).finally(() => { btn.textContent = originalText; btn.disabled = false; }); }
 
 </script>
 
