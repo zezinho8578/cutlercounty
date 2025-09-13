@@ -126,7 +126,7 @@
         .san-loss-group div { display: flex; gap: 10px; }
         .styled-checkbox { display: flex; align-items: center; cursor: pointer; user-select: none; }
         .styled-checkbox input[type="checkbox"] { display: none; }
-        .styled-checkbox .checkbox-visual { width: 16px; height: 16px; border: 1px solid var(--accent-color); display: inline-block; position: relative; flex-shrink: 0; background: #fff; }
+        .styled-checkbox .checkbox-visual { width: 16px; height: 16px; border: 1px solid var(--accent-color); display: inline-block; position: relative; flex-shrink: 0; background: #fff; margin-right: 8px;}
         .styled-checkbox input[type="checkbox"]:checked + .checkbox-visual::after { content: 'X'; position: absolute; top: 0px; left: 3px; color: var(--text-color); font-weight: bold; }
         .adapted-status { color: var(--danger-color); font-weight: bold; font-size: 0.9em; }
 
@@ -181,6 +181,15 @@
             pointer-events: none;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
+        
+        #autosave-status {
+            display: inline-block;
+            margin-left: 15px;
+            font-style: italic;
+            color: var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
 
     </style>
 </head>
@@ -233,10 +242,22 @@
 
 
 <script>
+    // --- STATE MANAGEMENT & CONFIG ---
+    let isFormDirty = false;
+    let autosaveTimeout;
+
     // --- DISABLE ENTER KEY ---
     window.addEventListener('keydown', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
+        }
+    });
+    
+    // --- UNSAVED CHANGES WARNING ---
+    window.addEventListener('beforeunload', (e) => {
+        if (isFormDirty) {
+            e.preventDefault();
+            e.returnValue = ''; // Standard for most browsers
         }
     });
     
@@ -273,6 +294,12 @@
                 <button onclick="screenshotPage(event)">SCREENSHOT</button>
                 <button onclick="exportToJson()">EXPORT TO .JSON</button>
                 <button onclick="showView('main')" class="secondary">RETURN TO MENU</button>
+                <label class="styled-checkbox" style="display: inline-flex; vertical-align: middle; margin-left: 15px;">
+                    <input type="checkbox" id="autosave-toggle" onchange="toggleAutosave(this.checked)">
+                    <span class="checkbox-visual"></span>
+                    AUTOSAVE
+                </label>
+                <span id="autosave-status"></span>
                 <form id="sheet-form" onsubmit="return false;"></form>
             </div>
         </main>
@@ -370,7 +397,33 @@
     const weaponPresets = { "Melee Weapons": [ { name: "Unarmed", skill: 40, range: 1, dmg: "1D4-1", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "Basic hand-to-hand strikes.", examples: "e.g., Boxing, Karate" }, { name: "Brass Knuckles", skill: 40, range: 1, dmg: "1D4", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A simple, concealable force-multiplier." }, { name: "Knife", skill: 30, range: 1, dmg: "1D4", ap: "3", lethality: "", ammoC: "", ammoM: "", desc: "A small, single-edged blade." }, { name: "Combat Dagger", skill: 30, range: 1, dmg: "1D6", ap: "3", lethality: "", ammoC: "", ammoM: "", desc: "A dedicated combat knife with a larger blade." }, { name: "Club/Baton", skill: 30, range: 1, dmg: "1D6", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A blunt instrument for subduing targets." }, { name: "Baseball Bat", skill: 30, range: 1, dmg: "1D8", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A heavy club for sport or improvised combat." }, { name: "Fire Axe", skill: 30, range: 1, dmg: "1D10", ap: "", lethality: "", ammoC: "", ammoM: "", desc: "A heavy, two-handed axe." } ], "Firearms": [ { name: "Light Pistol (.38)", skill: 20, range: 10, dmg: "1D8", ap: "", lethality: "", ammoC: 6, ammoM: 6, desc: "Small-caliber sidearms, easily concealable." }, { name: "Medium Pistol (9mm)", skill: 20, range: 15, dmg: "1D10", ap: "", lethality: "", ammoC: 15, ammoM: 15, desc: "Standard-issue service pistols." }, { name: "Heavy Pistol (.45)", skill: 20, range: 20, dmg: "1D12", ap: "", lethality: "", ammoC: 8, ammoM: 8, desc: "Large-caliber handguns with stopping power." }, { name: "Shotgun (Shot)", skill: 20, range: 50, dmg: "2D10", ap: "", lethality: "", ammoC: 5, ammoM: 5, desc: "Fires a spread of pellets, devastating at close range." }, { name: "Shotgun (Slug)", skill: 20, range: 75, dmg: "2D8", ap: "", lethality: "", ammoC: 5, ammoM: 5, desc: "Fires a single, solid projectile for greater range." }, { name: "Carbine (5.56mm)", skill: 20, range: 100, dmg: "1D12", ap: "3", lethality: "10", ammoC: 30, ammoM: 30, desc: "Standard patrol rifles, versatile for most scenarios." }, { name: "Rifle (.308)", skill: 20, range: 150, dmg: "1D12+2", ap: "5", lethality: "10", ammoC: 20, ammoM: 20, desc: "Full-power cartridges for superior range and penetration." } ] };
     
     // --- INITIALIZATION ---
-    window.onload = () => { populateRanks(); populateStats(); populateSkills(); loadSavedSheets(); setupTooltips(); populateWeaponCategories(); };
+    window.onload = () => {
+        populateRanks(); 
+        populateStats(); 
+        populateSkills(); 
+        loadSavedSheets(); 
+        setupTooltips(); 
+        populateWeaponCategories();
+        
+        document.getElementById('sheet-form').addEventListener('input', () => {
+            isFormDirty = true;
+            handleAutosave();
+        });
+        
+        const savedAutosavePref = localStorage.getItem('ccsd_autosave_enabled');
+        if (savedAutosavePref === 'true') {
+            document.getElementById('autosave-toggle').checked = true;
+        }
+
+        const autosavedData = localStorage.getItem('ccsd_autosave_sheet');
+        if (autosavedData) {
+            if (confirm("An unsaved autosave file was found. Do you want to load it?")) {
+                populateCompleteForm(JSON.parse(autosavedData));
+                showView('character-sheet');
+            }
+            localStorage.removeItem('ccsd_autosave_sheet');
+        }
+    };
     
     function resetForm() {
         document.getElementById('sheet-form').reset();
@@ -384,6 +437,8 @@
         addBond();
         updateAllCalculations();
         checkAdaptedStatus();
+        isFormDirty = false;
+        localStorage.removeItem('ccsd_autosave_sheet');
     }
     
     function populateRanks() { document.getElementById('rank').innerHTML = ranks.map(r => `<option value="${r}">${r}</option>`).join(''); }
@@ -396,13 +451,13 @@
         simpleSkillNames.forEach(skill => {
             const baseValue = dgSkills[skill];
             const skillId = `skill-${skill.replace(/\s+/g, '-')}`;
-            const tooltipText = skillDescriptions[skill] || '';
+            const tooltipText = (skillDescriptions[skill] || '').replace(/"/g, '&quot;');
             html += `<div class="skill-item"><div class="skill-label-input"><label for="${skillId}" data-tooltip="${tooltipText}">${skill}</label><input type="number" id="${skillId}" min="0" max="99" value="${baseValue}"></div></div>`;
         });
         html += '</div>';
         html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 15px;">';
         Object.keys(complexSkills).forEach(category => {
-            const categoryDesc = skillDescriptions[category] || '';
+            const categoryDesc = (skillDescriptions[category] || '').replace(/"/g, '&quot;');
             html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 data-tooltip="${categoryDesc}">${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${category}-skills-container"></div> </div>`;
         });
         html += '</div>';
@@ -489,16 +544,44 @@
         if (value <= 0) { deactivateArmor(); } else { currentArmorPoints = value; }
     }
     
+    // --- AUTOSAVE ---
+    function toggleAutosave(isEnabled) {
+        localStorage.setItem('ccsd_autosave_enabled', isEnabled);
+        if (isEnabled) {
+            handleAutosave(); // Trigger a save immediately if enabled
+        }
+    }
+
+    function handleAutosave() {
+        clearTimeout(autosaveTimeout);
+        const autosaveEnabled = document.getElementById('autosave-toggle').checked;
+        if (!autosaveEnabled || !isFormDirty) {
+            return;
+        }
+        autosaveTimeout = setTimeout(() => {
+            const data = getCompleteFormData();
+            if (!data['full-name']) return; 
+            localStorage.setItem('ccsd_autosave_sheet', JSON.stringify(data));
+            isFormDirty = false;
+            
+            const statusEl = document.getElementById('autosave-status');
+            statusEl.textContent = 'Autosaved.';
+            statusEl.style.opacity = '1';
+            setTimeout(() => { statusEl.style.opacity = '0'; }, 2000);
+
+        }, 2500); // 2.5-second delay after last input
+    }
+    
     // --- DATA MANAGEMENT ---
     function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => { const i = row.querySelectorAll('input'); return { name: i[0].value, skill: i[1].value, range: i[2].value, dmg: i[3].value, ap: i[4].value, lethality: i[5].value, ammoC: i[6].value, ammoM: i[7].value }; }); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value })); Object.keys(complexSkills).forEach(cat => { data[cat] = Array.from(document.querySelectorAll(`#${cat}-skills-container .sub-skill-item`)).map(item => ({ spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value })); }); data.isArmorActive = isArmorActive; data.currentArmorPoints = currentArmorPoints; return data; }
-    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key] && !['isArmorActive', 'currentArmorPoints'].includes(key)) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); document.getElementById('bonds-container').innerHTML = ''; if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); if (data.isArmorActive && data.currentArmorPoints > 0) { const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); isArmorActive = true; currentArmorPoints = data.currentArmorPoints; apInput.value = currentArmorPoints; apInput.max = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); } updateAllCalculations(); checkAdaptedStatus(); }
-    function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_DEPUTY'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Deputy file '${sheetName}' saved locally.`); loadSavedSheets(); } }
+    function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && !complexSkills[key] && !['isArmorActive', 'currentArmorPoints'].includes(key)) { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); document.getElementById('bonds-container').innerHTML = ''; if (data.weapons) data.weapons.forEach(w => addWeapon(w)); if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); if (data.isArmorActive && data.currentArmorPoints > 0) { const apInput = document.getElementById('armor-points'); const armorBtn = document.getElementById('armor-btn'); isArmorActive = true; currentArmorPoints = data.currentArmorPoints; apInput.value = currentArmorPoints; apInput.max = currentArmorPoints; apInput.classList.remove('hidden'); apInput.classList.add('armor-active'); armorBtn.classList.add('armor-active'); } else { deactivateArmor(); } updateAllCalculations(); checkAdaptedStatus(); isFormDirty = false; }
+    function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_DEPUTY'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Deputy file '${sheetName}' saved locally.`); loadSavedSheets(); isFormDirty = false; localStorage.removeItem('ccsd_autosave_sheet'); } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); const li = document.createElement('li'); li.innerHTML = `<span>${data.name}</span><div><button class="secondary" onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div>`; list.appendChild(li); } } }
     function loadSheet(key) { populateCompleteForm(JSON.parse(localStorage.getItem(key))); showView('character-sheet'); }
     function deleteSheet(key) { if(confirm("DELETE THIS FILE? This action cannot be undone.")){ localStorage.removeItem(key); loadSavedSheets(); }}
     function renameSheet(key) { const data = JSON.parse(localStorage.getItem(key)); const newName = prompt("New filename:", data.name); if (newName) { data.name = newName; localStorage.setItem(key, JSON.stringify(data)); loadSavedSheets(); } }
     function loadCharacterFromFile(event) { const file = event.target.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = e => { populateCompleteForm(JSON.parse(e.target.result)); showView('character-sheet'); }; reader.readAsText(file); }
-    function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'deputy').replace(/\s+/g, '_')}_cutler_county.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); }
+    function exportToJson(){ const data = getCompleteFormData(); const jsonString = JSON.stringify(data, null, 2); const blob = new Blob([jsonString], {type: "application/json"}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `${(data['full-name'] || 'deputy').replace(/\s+/g, '_')}_cutler_county.json`; document.body.appendChild(a); a.click(); document.body.removeChild(a); isFormDirty = false; localStorage.removeItem('ccsd_autosave_sheet'); }
     
     // --- Screenshot ---
     function screenshotPage(event) {
