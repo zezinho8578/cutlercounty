@@ -9,7 +9,7 @@
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <!-- Era-appropriate Typewriter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.gstatic" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -310,8 +310,9 @@
         html += '</div>';
         html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 15px;">';
         Object.keys(complexSkills).forEach(category => {
+            const sanitizedCategory = category.replace(/\s+/g, '-'); // *** FIX 1: Sanitize ID for creation ***
             const categoryDesc = (skillDescriptions[category] || `Specialized skill in ${category}.`).replace(/"/g, '&quot;');
-            html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 data-tooltip="${categoryDesc}">${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${category}-skills-container"></div> </div>`;
+            html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 data-tooltip="${categoryDesc}">${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${sanitizedCategory}-skills-container"></div> </div>`;
         });
         html += '</div>';
         container.innerHTML = html;
@@ -392,7 +393,11 @@
 
     // --- INTERACTIVE SECTIONS ---
     function checkAdaptedStatus() { const vCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', vCount < 3); const hCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', hCount < 3); }
-    function addComplexSkill(category, data = {}){ const container = document.getElementById(`${category}-skills-container`); const item = document.createElement('div'); item.className = 'sub-skill-item'; const maxVal = isSkillSetupMode ? 80 : 99; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="${maxVal}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    function addComplexSkill(category, data = {}){ 
+        const sanitizedCategory = category.replace(/\s+/g, '-'); // *** FIX 2: Sanitize ID for finding the container ***
+        const container = document.getElementById(`${sanitizedCategory}-skills-container`); 
+        const item = document.createElement('div'); item.className = 'sub-skill-item'; const maxVal = isSkillSetupMode ? 80 : 99; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="${maxVal}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); 
+    }
     function addWeapon(data = {}, closeModal = false) { const newRow = document.getElementById('weapons-body').insertRow(); const w = {...data}; w.skill = getCalculatedSkill(w.skillIdentifier) || w.skill || ''; newRow.dataset.skillIdentifier = w.skillIdentifier || ''; newRow.innerHTML = `<td><input type="text" value="${w.name || ''}"></td><td><input type="number" min="0" max="99" value="${w.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${w.range || ''}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${w.dmg || ''}"></td><td><input type="number" min="0" value="${w.ap || ''}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${w.lethality || ''}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${w.ammoC || ''}"> / <input type="number" min="0" value="${w.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`; if(closeModal) closeWeaponModal(); updateLinkedWeaponStats(); }
     function getCalculatedSkill(id) { if (!id) return null; const formattedId = `skill-${id.replace(/\s+/g, '-')}`; const skillEl = document.getElementById(formattedId); return skillEl ? parseInt(skillEl.value) : null; }
     function updateLinkedWeaponStats() { document.querySelectorAll('#weapons-body tr[data-skill-identifier]').forEach(row => { const id = row.dataset.skillIdentifier; if (!id) return; const skillValue = getCalculatedSkill(id); if (skillValue !== null) { row.querySelector('td:nth-child(2) input').value = skillValue; } }); }
@@ -414,7 +419,33 @@
     function validateArmorPoints(event) { let value = parseInt(event.target.value, 10); if (isNaN(value) || value <= 0) { deactivateArmor(); } else { currentArmorPoints = value; } }
     
     // --- DATA MANAGEMENT ---
-    function getCompleteFormData() { const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` }; document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; }); data.skills = {}; document.querySelectorAll('.skill-item input[type="number"]').forEach(i => { const cb = document.getElementById(`check-${i.id}`); data.skills[i.id] = {score: i.value, checked: cb ? cb.checked : false}; }); data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => ({ name: row.cells[0].querySelector('input').value, skill: row.cells[1].querySelector('input').value, range: row.cells[2].querySelector('input').value, dmg: row.cells[3].querySelector('input').value, ap: row.cells[4].querySelector('input').value, lethality: row.cells[5].querySelector('input').value, ammoC: row.cells[6].querySelectorAll('input')[0].value, ammoM: row.cells[6].querySelectorAll('input')[1].value, skillIdentifier: row.dataset.skillIdentifier, })); data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({ name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value })); Object.keys(complexSkills).forEach(cat => { data[cat] = Array.from(document.querySelectorAll(`#${cat}-skills-container .sub-skill-item`)).map(item => ({ spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value, checked: item.querySelector('input[type=checkbox]').checked })); }); data.isArmorActive = isArmorActive; data.currentArmorPoints = currentArmorPoints; data.isSkillSetupMode = isSkillSetupMode; return data; }
+    function getCompleteFormData() {
+        const data = { id: document.getElementById('character-id').value || `sheet_${Date.now()}` };
+        document.querySelectorAll('#sheet-form [id]').forEach(el => { if (el.id) data[el.id] = el.type === 'checkbox' ? el.checked : el.value; });
+        
+        data.skills = {};
+        document.querySelectorAll('.skill-item input[type="number"]').forEach(i => {
+            const cb = document.getElementById(`check-${i.id}`);
+            data.skills[i.id] = {score: i.value, checked: cb ? cb.checked : false};
+        });
+
+        data.weapons = Array.from(document.querySelectorAll('#weapons-body tr')).map(row => ({
+            name: row.cells[0].querySelector('input').value, skill: row.cells[1].querySelector('input').value, range: row.cells[2].querySelector('input').value, dmg: row.cells[3].querySelector('input').value, ap: row.cells[4].querySelector('input').value, lethality: row.cells[5].querySelector('input').value, ammoC: row.cells[6].querySelectorAll('input')[0].value, ammoM: row.cells[6].querySelectorAll('input')[1].value, skillIdentifier: row.dataset.skillIdentifier,
+        }));
+        data.bonds = Array.from(document.querySelectorAll('.bond-item')).map(item => ({
+            name: item.querySelector('input[type="text"]').value, score: item.querySelector('input[type=number]').value
+        }));
+        Object.keys(complexSkills).forEach(cat => {
+            const sanitizedCategory = cat.replace(/\s+/g, '-'); // *** FIX 3: Sanitize ID for saving data ***
+            data[cat] = Array.from(document.querySelectorAll(`#${sanitizedCategory}-skills-container .sub-skill-item`)).map(item => ({
+                spec: item.querySelector('input[type=text]').value, score: item.querySelector('input[type=number]').value, checked: item.querySelector('input[type=checkbox]').checked
+            }));
+        });
+        data.isArmorActive = isArmorActive;
+        data.currentArmorPoints = currentArmorPoints;
+        data.isSkillSetupMode = isSkillSetupMode;
+        return data;
+    }
     function populateCompleteForm(data) { resetForm(); Object.keys(data).forEach(key => { const el = document.getElementById(key); if (el && typeof data[key] !== 'object') { el[el.type === 'checkbox' ? 'checked' : 'value'] = data[key]; } }); if(data.skills) { for(const id in data.skills) { const el = document.getElementById(id); if(el) el.value = data.skills[id].score; const cb = document.getElementById(`check-${id}`); if(cb) cb.checked = data.skills[id].checked; } } document.getElementById('bonds-container').innerHTML = ''; if (data.bonds && data.bonds.length > 0) data.bonds.forEach(b => addBond(b)); else { addBond(); addBond(); addBond(); } if (data.weapons) data.weapons.forEach(w => addWeapon(w)); Object.keys(complexSkills).forEach(cat => { if (data[cat]) data[cat].forEach(s => addComplexSkill(cat, s)); }); if (data.isArmorActive) { selectArmor(data.currentArmorPoints, false); closeArmorModal(); } else { deactivateArmor(); } setSkillInputState(data.isSkillSetupMode !== false); updateAllCalculations(); checkAdaptedStatus(); updateRollSkillsButtonVisibility(); isFormDirty = false; }
     function saveCharacter() { const data = getCompleteFormData(); const name = data['full-name'] || 'UNNAMED_DEPUTY'; const sheetName = prompt("Save file as:", name); if (sheetName) { localStorage.setItem(data.id, JSON.stringify({ name: sheetName, ...data })); alert(`Deputy file '${sheetName}' saved locally.`); loadSavedSheets(); isFormDirty = false; } }
     function loadSavedSheets() { const list = document.getElementById('saved-sheets-list'); list.innerHTML = ''; for (let i = 0; i < localStorage.length; i++) { const key = localStorage.key(i); if (key.startsWith('sheet_')) { const data = JSON.parse(localStorage.getItem(key)); list.innerHTML += `<li><span>${data.name}</span><div><button class="secondary" onclick="renameSheet('${key}')">RENAME</button><button onclick="loadSheet('${key}')">LOAD</button><button class="remove-btn" onclick="deleteSheet('${key}')">DELETE</button></div></li>`; } } }
