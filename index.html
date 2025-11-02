@@ -235,6 +235,7 @@
         </div>
     </div>
 
+<script src="data.js"></script>
 <script>
     // --- STATE MANAGEMENT & CONFIG ---
     let isFormDirty = false;
@@ -251,9 +252,6 @@
     const statDescriptions = { STR: { 8: "Average", 12: "Strong", 15: "Powerful", 18: "Peak Human" }, DEX: { 8: "Average", 12: "Agile", 15: "Nimble", 18: "Lightning Reflexes" }, CON: { 8: "Average", 12: "Hardy", 15: "Tough", 18: "Superhuman Endurance" }, INT: { 8: "Average", 12: "Sharp", 15: "Brilliant", 18: "Genius" }, POW: { 8: "Average", 12: "Determined", 15: "Indomitable", 18: "Unyielding Will" }, CHA: { 8: "Average", 12: "Likable", 15: "Charismatic", 18: "Compelling Presence" } };
     const dgSkills = { 'Accounting': 10, 'Alertness': 20, 'Anthropology': 0, 'Archeology': 0, 'Artillery': 0, 'Athletics': 30, 'Bureaucracy': 10, 'Criminology': 10, 'Demolitions': 0, 'Disguise': 10, 'Dodge': 30, 'Drive': 20, 'Firearms': 20, 'First Aid': 10, 'Forensics': 0, 'Heavy Machinery': 10, 'Heavy Weapons': 0, 'History': 10, 'HUMINT': 10, 'Law': 0, 'Medicine': 0, 'Melee Weapons': 30, 'Navigate': 10, 'Occult': 10, 'Persuade': 20, 'Pharmacy': 0, 'Psychotherapy': 10, 'Ride': 10, 'Search': 20, 'SIGINT': 0, 'Stealth': 20, 'Surgery': 0, 'Survival': 10, 'Swim': 20, 'Unarmed Combat': 40, 'Unnatural': 0 };
     const complexSkills = { 'Art': ['Acting', 'Photography', 'Writing'], 'Craft': ['Electrician', 'Locksmithing', 'Mechanic', 'Microelectronics'], 'Foreign Language': ['Spanish', 'Russian'], 'Military Science': ['Air', 'Land', 'Sea'], 'Pilot': ['Airplane', 'Boat', 'Helicopter', 'Heavy Vehicle'], 'Science': ['Biology', 'Chemistry', 'Geology', 'Mathematics', 'Physics'] };
-    const armorPresets = [ { name: "Kevlar vest (Concealable)", ap: 3, desc: "Standard soft body armor.", isBombSuit: false }, { name: "Reinforced Kevlar vest (Concealable)", ap: 4, desc: "Soft body armor with trauma plate inserts.", isBombSuit: false }, { name: "Tactical body armor", ap: 5, desc: "Hard plate carrier. Cannot be concealed.", isBombSuit: false }, { name: "Bomb suit", ap: 10, desc: "Heavy EOD suit. Includes helmet. Cannot be concealed.", isBombSuit: true } ];
-    const weaponPresets = { "Melee Weapons": [ { name: "Unarmed", skillIdentifier: "Unarmed Combat", range: 1, dmg: "1D4-1", ap: "", lethality: "", desc: "Basic hand-to-hand strikes." }, { name: "Knife", skillIdentifier: "Melee Weapons", range: 1, dmg: "1D4", ap: "3", lethality: "", desc: "A small, single-edged blade." }, { name: "Club/Baton", skillIdentifier: "Melee Weapons", range: 1, dmg: "1D6", ap: "", lethality: "", desc: "A blunt instrument for subduing targets." } ], "Firearms": [ { name: "Medium Pistol (9mm)", skillIdentifier: "Firearms", range: 15, dmg: "1D10", ap: "", lethality: "", ammoC: 15, ammoM: 15, desc: "Standard-issue service pistols." }, { name: "Heavy Pistol (.45)", skillIdentifier: "Firearms", range: 20, dmg: "1D12", ap: "", lethality: "", ammoC: 8, ammoM: 8, desc: "Large-caliber handguns with stopping power." }, { name: "Shotgun (Shot)", skillIdentifier: "Firearms", range: 50, dmg: "2D10", ap: "", lethality: "", ammoC: 5, ammoM: 5, desc: "Fires a spread of pellets, devastating at close range." }, { name: "Carbine (5.56mm)", skillIdentifier: "Firearms", range: 100, dmg: "1D12", ap: "3", lethality: "10", ammoC: 30, ammoM: 30, desc: "Standard patrol rifles, versatile for most scenarios." } ] };
-    const skillDescriptions = { 'Accounting': 'The study of finance and business.', 'Alertness': 'Detects danger, hears quiet sounds, spots hidden objects.', 'Athletics': 'Running, jumping, climbing, throwing.', 'Firearms': 'Safe and accurate shooting in combat.', 'Unarmed Combat': 'Fighting with bare hands.', 'Melee Weapons': 'Fighting with hand-held weapons.' };
     
     // --- DISABLE ENTER KEY & UNSAVED CHANGES WARNING ---
     window.addEventListener('keydown', e => { if (e.key === 'Enter') e.preventDefault(); });
@@ -269,7 +267,7 @@
     document.getElementById('sheet-form').innerHTML = `
         <input type="hidden" id="character-id">
         <section class="form-section"> <h2>IDENTIFICATION</h2> <div class="grid-container" style="grid-template-columns: 2fr 1fr 1fr"> <div><label for="full-name">FULL NAME</label><input type="text" id="full-name"></div> <div><label for="rank">RANK</label><select id="rank"></select></div> <div><label for="callsign">CALLSIGN</label><input type="text" id="callsign"></div> </div> <div class="grid-container" style="grid-template-columns: 1fr 1fr 2fr 2fr; margin-top: 15px;"> <div><label for="sex">SEX</label><select id="sex"><option>M</option><option>F</option><option>NA</option></select></div> <div><label for="dob">D.O.B.</label><input type="date" id="dob"></div> <div><label for="nationality">NATIONALITY</label><input type="text" id="nationality"></div> <div><label for="education">EDUCATION & HISTORY</label><input type="text" id="education"></div> </div> </section>
-        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2> <p class="points-note">Spend 25 points. Each stat must be between 8 and 18.</p> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <span id="hp-max">0</span></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <span id="wp-max">0</span></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <span id="san-max">0</span></div></div> <div><label>BREAKING PT</label><input type="text" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Deputy must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <p class="points-note" style="margin-top: -5px;">Starting value equals CHA score.</p> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> VIOLENCE</div> <span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> HELPLESSNESS</div><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"> <h2 style="border-bottom:none;">SKILLS <span id="skill-points-counter" style="font-weight: normal; font-size: 0.8em;"></span></h2> <div> <button type="button" id="lock-skills-btn" class="hidden" onclick="lockSkills()">LOCK SKILLS</button> <button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button> </div> </div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;"></div> </section> </div> </div>
+        <div class="form-grid"> <div class="col-1"> <section class="form-section"> <h2>CORE ATTRIBUTES (<span id="stat-points-remaining">25</span> PTS)</h2> <p class="points-note">Spend 25 points. Each stat must be between 8 and 18.</p> <div id="stats-container" style="display: flex; flex-direction: column; gap: 8px;"></div> </section> <section class="form-section"> <h2>DERIVED ATTRIBUTES</h2> <div class="grid-container" style="grid-template-columns: 1fr 1fr 1fr;"> <div><label>HIT POINTS (HP)</label><div class="derived-attr-input"><input type="number" id="hp-current" min="0"> / <span id="hp-max">0</span></div></div> <div><label>ARMOR (AP)</label><div class="derived-attr-input armor-controls"><button type="button" id="armor-btn" onclick="toggleArmor()">△</button><input type="number" id="armor-points" class="hidden" min="0" oninput="validateArmorPoints(event)"></div></div> <div><label>WILLPOWER (WP)</label><div class="derived-attr-input"><input type="number" id="wp-current" min="0"> / <span id="wp-max">0</span></div></div> <div><label>SANITY (SAN)</label><div class="derived-attr-input"><input type="number" id="san-current" min="0" oninput="checkBreakingPoint()"> / <span id="san-max">0</span></div></div> <div><label>BREAKING PT</label><input type="text" id="bp" readonly></div> </div> <div id="bp-warning" class="hidden"> SAN is at or below Breaking Point! Deputy must acquire a new disorder. <button type="button" onclick="acknowledgeBreakingPoint()">ACK & RESET BP</button> </div> </section> <section class="form-section"> <div class="bonds-header" style="display: flex; justify-content: space-between; align-items: center;"> <h2>BONDS</h2> <button type="button" onclick="addBond()">+ ADD</button> </div> <p class="points-note" style="margin-top: -5px;">Starting value equals CHA score.</p> <div id="bonds-container"></div> </section> <section class="form-section"> <h2 style="text-align: center; border:none; margin-bottom: 5px;" data-tooltip="Each checkmark represents a traumatic experience. Checking all three boxes means the deputy is Adapted. They take reduced Sanity loss from that trauma type, but suffer a permanent psychological scar.">PSYCH PROFILE</h2> <div class="san-loss-container"> <div class="san-loss-group"> <div class="san-loss-label"> VIOLENCE</div> <span id="violence-adapted" class="adapted-status hidden">ADAPTED</span> <div> <label class="styled-checkbox"><input type="checkbox" id="violence1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="violence3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> <div class="san-loss-group"> <div class="san-loss-label"> HELPLESSNESS</div><span id="helplessness-adapted" class="adapted-status hidden">ADAPTED</span> <div> <label class="styled-checkbox"><input type="checkbox" id="helplessness1" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness2" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> <label class="styled-checkbox"><input type="checkbox" id="helplessness3" onclick="checkAdaptedStatus()"><span class="checkbox-visual"></span></label> </div> </div> </div> </section> </div> <div class="col-2"> <section class="form-section" style="flex-grow: 1; display: flex; flex-direction: column;"> <div style="display: flex; justify-content: space-between; align-items: center;"> <h2 style="border-bottom:none;">SKILLS <span id="skill-points-counter" style="font-weight: normal; font-size: 0.8em;"></span></h2> <div> <button type="button" id="lock-skills-btn" class="hidden" onclick="lockSkills()">LOCK SKILLS</button> <button type="button" id="roll-skills-btn" class="hidden" onclick="startSkillImprovement()">Roll 1d4s</button> </div> </div> <div id="skills-container" style="display: flex; flex-direction: column; gap: 15px; flex-grow: 1;"></div> </section> </div> </div>
         <section class="form-section"> <h2>WEAPONS & EQUIPMENT</h2> <label for="gear">ARMOR AND GEAR</label> <textarea id="gear"></textarea> <label for="notes-field" style="margin-top:10px;">NOTES</label> <textarea id="notes-field"></textarea> <h3 style="margin-top: 15px;">WEAPONS</h3> <div class="table-wrapper"><table id="weapons-table"> <thead> <tr><th>NAME</th><th>SKILL %</th><th>BASE RANGE</th><th>DAMAGE</th><th>ARMOR PIERCING</th><th>LETHALITY</th><th>AMMO</th><th></th></tr> </thead> <tbody id="weapons-body"></tbody> </table></div> <button type="button" onclick="openWeaponModal()">+ ADD WEAPON</button> </section>
     `;
 
@@ -312,7 +310,7 @@
         html += '</div>';
         html += '<div class="grid-container" style="grid-template-columns: 1fr 1fr; align-items: stretch; margin-top: 15px;">';
         Object.keys(complexSkills).forEach(category => {
-            const categoryDesc = (skillDescriptions[category] || '').replace(/"/g, '&quot;');
+            const categoryDesc = (skillDescriptions[category] || `Specialized skill in ${category}.`).replace(/"/g, '&quot;');
             html += `<div class="sub-skill-group"> <div class="sub-skill-header-flex"><h3 data-tooltip="${categoryDesc}">${category}</h3><button type="button" class="secondary" onclick="addComplexSkill('${category}')">+ ADD</button></div> <div id="${category}-skills-container"></div> </div>`;
         });
         html += '</div>';
@@ -335,94 +333,66 @@
     function changeStat(stat, delta) { const input = document.getElementById(stat); let pointsSpent = stats.reduce((acc, s) => acc + (parseInt(document.getElementById(s).value) - MIN_STAT_VALUE), 0); let currentValue = parseInt(input.value); if (delta > 0 && pointsSpent < MAX_STAT_POINTS && currentValue < MAX_STAT_VALUE) { input.value = currentValue + 1; } else if (delta < 0 && currentValue > MIN_STAT_VALUE) { input.value = currentValue - 1; } updateAllCalculations(); }
     function getStatDescription(stat, val) { const tiers = statDescriptions[stat]; let desc = ''; for (const key in tiers) { if (val >= key) desc = tiers[key]; } return desc ? `// ${desc}` : ''; }
     function updateAllCalculations() { let pointsSpent = 0; stats.forEach(stat => { const value = parseInt(document.getElementById(stat).value); pointsSpent += (value - MIN_STAT_VALUE); document.getElementById(`${stat}x5`).textContent = `x5: ${value * 5}`; document.getElementById(`${stat}-desc`).textContent = getStatDescription(stat, value); }); document.getElementById('stat-points-remaining').textContent = MAX_STAT_POINTS - pointsSpent; updateDerivedAttributes(); }
-    function updateDerivedAttributes() { const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value); const hpMax = Math.ceil((str + con) / 2), wpMax = pow, sanMax = pow * 5; ['hp', 'wp', 'san'].forEach(attr => { const current = document.getElementById(`${attr}-current`); const maxEl = document.getElementById(`${attr}-max`); const maxVal = eval(`${attr}Max`); maxEl.textContent = maxVal; current.max = maxVal; if (!current.value || parseInt(current.value) > maxVal) { current.value = maxVal; } }); document.getElementById('bp').value = Math.max(0, sanMax - pow); checkBreakingPoint(); }
+    function updateDerivedAttributes() {
+        const str = parseInt(document.getElementById('STR').value), con = parseInt(document.getElementById('CON').value), pow = parseInt(document.getElementById('POW').value);
+        const derived = {
+            hp: { current: document.getElementById('hp-current'), maxEl: document.getElementById('hp-max'), newMax: Math.ceil((str + con) / 2) },
+            wp: { current: document.getElementById('wp-current'), maxEl: document.getElementById('wp-max'), newMax: pow },
+            san: { current: document.getElementById('san-current'), maxEl: document.getElementById('san-max'), newMax: pow * 5 }
+        };
+        for (const attr in derived) {
+            const { current, maxEl, newMax } = derived[attr];
+            const oldMax = parseInt(maxEl.textContent) || 0;
+            maxEl.textContent = newMax;
+            current.max = newMax;
+            if (parseInt(current.value) === oldMax || !current.value) {
+                current.value = newMax;
+            }
+            if (parseInt(current.value) > newMax) {
+                current.value = newMax;
+            }
+        }
+        document.getElementById('bp').value = Math.max(0, derived.san.newMax - pow);
+        checkBreakingPoint();
+    }
     function checkBreakingPoint() { const sanCurrent = parseInt(document.getElementById('san-current').value), bp = parseInt(document.getElementById('bp').value); document.getElementById('bp-warning').classList.toggle('hidden', sanCurrent > bp || isNaN(sanCurrent)); }
     function acknowledgeBreakingPoint() { document.getElementById('bp').value = Math.max(0, parseInt(document.getElementById('san-current').value) - parseInt(document.getElementById('POW').value)); document.getElementById('bp-warning').classList.add('hidden'); }
     
     // --- SKILL SYSTEMS ---
-    function setSkillInputState(isSetup) {
-        isSkillSetupMode = isSetup;
-        const maxVal = isSetup ? 80 : 99;
-        document.querySelectorAll('#skills-container input[type="number"]').forEach(input => {
-            input.max = maxVal;
-            if (parseInt(input.value) > maxVal) input.value = maxVal;
-        });
-        updateSkillPointsCounter();
-    }
-
-    function updateSkillPointsCounter() {
-        const counterEl = document.getElementById('skill-points-counter'), lockBtn = document.getElementById('lock-skills-btn');
-        lockBtn.classList.toggle('hidden', !isSkillSetupMode);
-        
-        const skillInputs = document.querySelectorAll('#skills-container input[type="number"]');
-        let currentPointsSum = 0;
-        skillInputs.forEach(input => { currentPointsSum += parseInt(input.value, 10) || 0; });
-
-        if (isSkillSetupMode) {
-            const pointsSpent = currentPointsSum - totalBaseSkillPoints;
-            counterEl.textContent = `(${pointsSpent} / ${SKILL_POINTS_BUDGET} PTS)`;
-            lockBtn.disabled = pointsSpent !== SKILL_POINTS_BUDGET;
-            if (pointsSpent > SKILL_POINTS_BUDGET) counterEl.style.color = 'var(--danger-color)';
-            else if (pointsSpent === SKILL_POINTS_BUDGET) counterEl.style.color = 'var(--accent-color)';
-            else counterEl.style.color = 'inherit';
-        } else {
-            counterEl.textContent = `(Total: ${currentPointsSum})`;
-            counterEl.style.color = 'inherit';
-        }
-    }
-
-    function lockSkills() {
-        if (confirm(`This will spend ${SKILL_POINTS_BUDGET} points and finalize the skill setup. Proceed?`)) {
-            setSkillInputState(false);
-            isFormDirty = true;
-        }
-    }
-
+    function setSkillInputState(isSetup) { isSkillSetupMode = isSetup; const maxVal = isSetup ? 80 : 99; document.querySelectorAll('#skills-container input[type="number"]').forEach(input => { input.max = maxVal; if (parseInt(input.value) > maxVal) input.value = maxVal; }); updateSkillPointsCounter(); }
+    function updateSkillPointsCounter() { const counterEl = document.getElementById('skill-points-counter'), lockBtn = document.getElementById('lock-skills-btn'); lockBtn.classList.toggle('hidden', !isSkillSetupMode); const skillInputs = document.querySelectorAll('#skills-container input[type="number"]'); let currentPointsSum = 0; skillInputs.forEach(input => { currentPointsSum += parseInt(input.value, 10) || 0; }); if (isSkillSetupMode) { const pointsSpent = currentPointsSum - totalBaseSkillPoints; counterEl.textContent = `(${pointsSpent} / ${SKILL_POINTS_BUDGET} PTS)`; lockBtn.disabled = pointsSpent !== SKILL_POINTS_BUDGET; if (pointsSpent > SKILL_POINTS_BUDGET) counterEl.style.color = 'var(--danger-color)'; else if (pointsSpent === SKILL_POINTS_BUDGET) counterEl.style.color = 'var(--accent-color)'; else counterEl.style.color = 'inherit'; } else { counterEl.textContent = `(Total: ${currentPointsSum})`; counterEl.style.color = 'inherit'; } }
+    function lockSkills() { if (confirm(`This will spend ${SKILL_POINTS_BUDGET} points and finalize the skill setup. Proceed?`)) { setSkillInputState(false); isFormDirty = true; } }
     function updateRollSkillsButtonVisibility() { const checked = document.querySelectorAll('#skills-container input[type="checkbox"]:checked'); document.getElementById('roll-skills-btn').classList.toggle('hidden', checked.length === 0); }
     function startSkillImprovement() { document.getElementById('skill-roll-modal').classList.remove('hidden'); document.getElementById('skill-roll-prompt').classList.remove('hidden'); document.getElementById('skill-roll-process').classList.add('hidden'); document.getElementById('skill-roll-conclusion').classList.add('hidden'); }
     function closeSkillRollModal() { document.getElementById('skill-roll-modal').classList.add('hidden'); }
     async function executeSkillRolls() {
         const checkedBoxes = Array.from(document.querySelectorAll('#skills-container input[type="checkbox"]:checked'));
         if (checkedBoxes.length === 0) { closeSkillRollModal(); return; }
-        
-        document.getElementById('skill-roll-prompt').classList.add('hidden');
-        document.getElementById('skill-roll-process').classList.remove('hidden');
-
+        document.getElementById('skill-roll-prompt').classList.add('hidden'); document.getElementById('skill-roll-process').classList.remove('hidden');
         const skillNameEl = document.getElementById('rolling-skill-name'), diceEl = document.getElementById('dice-animation'), resultEl = document.getElementById('roll-result-text');
-        
         for (const box of checkedBoxes) {
             const skillItem = box.closest('.skill-item, .sub-skill-item');
             const scoreInput = skillItem.querySelector('input[type="number"]');
-            const skillLabel = skillItem.querySelector('label').textContent.trim() || skillItem.querySelector('input[type="text"]')?.value;
             const currentScore = parseInt(scoreInput.value, 10);
-
+            let skillLabel = "UNDEFINED";
+            if (skillItem.classList.contains('skill-item')) { skillLabel = skillItem.querySelector('.skill-label-input label').textContent.trim(); } 
+            else if (skillItem.classList.contains('sub-skill-item')) { const specInput = skillItem.querySelector('input[type="text"]'); if (specInput) { const specialization = specInput.value || '(Specialization)'; const categoryGroup = skillItem.closest('.sub-skill-group'); const categoryName = categoryGroup.querySelector('h3').textContent.trim(); skillLabel = `${categoryName}: ${specialization}`; } }
             if (currentScore >= 99) continue;
-
-            skillNameEl.textContent = `ROLLING: ${skillLabel}`;
+            skillNameEl.textContent = `ROLLING: ${skillLabel.toUpperCase()}`;
             resultEl.textContent = '';
             const animationInterval = setInterval(() => { diceEl.textContent = Math.floor(Math.random() * 4) + 1; }, 100);
-            await new Promise(resolve => setTimeout(resolve, 1000)); 
-            clearInterval(animationInterval);
-            
-            const roll = Math.floor(Math.random() * 4) + 1;
-            diceEl.textContent = roll;
-            const newScore = Math.min(99, currentScore + roll);
-            scoreInput.value = newScore;
-            resultEl.textContent = `Result: +${roll}. New Score: ${newScore}.`;
-            box.checked = false;
-            
+            await new Promise(resolve => setTimeout(resolve, 1000)); clearInterval(animationInterval);
+            const roll = Math.floor(Math.random() * 4) + 1; diceEl.textContent = roll;
+            const newScore = Math.min(99, currentScore + roll); scoreInput.value = newScore;
+            resultEl.textContent = `Result: +${roll}. New Score: ${newScore}.`; box.checked = false;
             await new Promise(resolve => setTimeout(resolve, 1500));
         }
-
-        document.getElementById('skill-roll-process').classList.add('hidden');
-        document.getElementById('skill-roll-conclusion').classList.remove('hidden');
-        updateRollSkillsButtonVisibility();
-        isFormDirty = true;
+        document.getElementById('skill-roll-process').classList.add('hidden'); document.getElementById('skill-roll-conclusion').classList.remove('hidden'); updateRollSkillsButtonVisibility(); isFormDirty = true;
     }
 
     // --- INTERACTIVE SECTIONS ---
     function checkAdaptedStatus() { const vCount = document.querySelectorAll('#violence1:checked, #violence2:checked, #violence3:checked').length; document.getElementById('violence-adapted').classList.toggle('hidden', vCount < 3); const hCount = document.querySelectorAll('#helplessness1:checked, #helplessness2:checked, #helplessness3:checked').length; document.getElementById('helplessness-adapted').classList.toggle('hidden', hCount < 3); }
-    function addComplexSkill(category, data = {}){ const container = document.getElementById(`${category}-skills-container`); const item = document.createElement('div'); item.className = 'sub-skill-item'; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="99" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
+    function addComplexSkill(category, data = {}){ const container = document.getElementById(`${category}-skills-container`); const item = document.createElement('div'); item.className = 'sub-skill-item'; const maxVal = isSkillSetupMode ? 80 : 99; item.innerHTML = `<label class="styled-checkbox"><input type="checkbox" ${data.checked ? 'checked' : ''}><span class="checkbox-visual"></span></label><div class="skill-label-input"><input type="text" placeholder="Specialization" value="${data.spec || ''}"><input type="number" min="0" max="${maxVal}" value="${data.score || 0}"></div><button class="remove-btn" onclick="this.parentElement.remove()">X</button>`; container.appendChild(item); }
     function addWeapon(data = {}, closeModal = false) { const newRow = document.getElementById('weapons-body').insertRow(); const w = {...data}; w.skill = getCalculatedSkill(w.skillIdentifier) || w.skill || ''; newRow.dataset.skillIdentifier = w.skillIdentifier || ''; newRow.innerHTML = `<td><input type="text" value="${w.name || ''}"></td><td><input type="number" min="0" max="99" value="${w.skill}"></td><td><div class="input-group"><input type="number" min="0" value="${w.range || ''}"><span class="input-group-addon">m</span></div></td><td><input type="text" value="${w.dmg || ''}"></td><td><input type="number" min="0" value="${w.ap || ''}"></td><td><div class="input-group"><input type="number" min="0" max="100" value="${w.lethality || ''}"><span class="input-group-addon">%</span></div></td><td><div class="derived-attr-input"><input type="number" min="0" value="${w.ammoC || ''}"> / <input type="number" min="0" value="${w.ammoM || ''}"></div></td><td><button type="button" class="remove-btn" onclick="this.closest('tr').remove()">X</button></td>`; if(closeModal) closeWeaponModal(); updateLinkedWeaponStats(); }
     function getCalculatedSkill(id) { if (!id) return null; const formattedId = `skill-${id.replace(/\s+/g, '-')}`; const skillEl = document.getElementById(formattedId); return skillEl ? parseInt(skillEl.value) : null; }
     function updateLinkedWeaponStats() { document.querySelectorAll('#weapons-body tr[data-skill-identifier]').forEach(row => { const id = row.dataset.skillIdentifier; if (!id) return; const skillValue = getCalculatedSkill(id); if (skillValue !== null) { row.querySelector('td:nth-child(2) input').value = skillValue; } }); }
